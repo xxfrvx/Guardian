@@ -2,28 +2,20 @@ from telegram import Update
 from telegram.ext import ContextTypes
 import logging
 
-# Импорт объекта базы данных
-from services.database import db
-
 logger = logging.getLogger(__name__)
 
 async def cb_accept(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
+    await q.answer()
+
+    logger.info("Callback received: %s from user %s", q.data, q.from_user.id)
 
     try:
-        await q.answer()  # Сигнал Telegram: клик принят
-        logger.info("Callback received: %s from user %s", q.data, q.from_user.id)
-
-        # Проверка согласия: безопасный запрос к БД
-        await db.execute(
-            "UPDATE users SET terms_accepted = TRUE WHERE id = $1", 
-            q.from_user.id
-        )
-
-        logger.info("mark_accept_terms completed for user %s", q.from_user.id)
-
+        db = context.bot_data["db"]
+        await db.execute("UPDATE users SET accepted_terms_at = now() WHERE user_id = $1", q.from_user.id)
+        logger.info("Terms accepted recorded for user %s", q.from_user.id)
         await q.edit_message_text("Спасибо! Условия приняты ✅")
 
     except Exception as e:
-        logger.error("Error in cb_accept for user %s: %s", q.from_user.id, str(e))
-        await q.edit_message_text("Произошла ошибка при обработке. Попробуйте ещё раз.")
+        logger.exception("Ошибка при обновлении согласия для user_id=%s: %s", q.from_user.id, str(e))
+        await q.edit_message_text("Ошибка при обработке. Попробуйте ещё раз позже.")
