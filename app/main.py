@@ -4,15 +4,12 @@ from app.handlers import start, menu, profile, check, reports, moderation, appea
 from telegram.ext import Application
 from handlers.callback_terms import cb_accept
 from telegram.ext import CallbackQueryHandler
-from services.database import Database
 
 
 
 def main():
     app = ApplicationBuilder().token(config.BOT_TOKEN).concurrent_updates(True).build()
     app.add_handler(CallbackQueryHandler(cb_accept, pattern="accept_terms"))
-    db = Database(dsn="postgresql://user:pass@host:port/dbname")
-await db.connect()
 
     start.setup(app)
     menu.setup(app)
@@ -23,8 +20,6 @@ await db.connect()
     appeals.setup(app)
     coins.setup(app)
     groups.setup(app)
-
-
 
     print(f"{config.BOT_NAME} запущен.")
     app.run_polling(close_loop=False)
