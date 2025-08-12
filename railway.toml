@@ -2,4 +2,4 @@
 nixpacksVersion = "1.15.0"
 
 [deploy]
-startCommand = "python app/main.py"
+startCommand = "PYTHONPATH=. python app/main.py"
