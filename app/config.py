@@ -5,7 +5,7 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 BOT_NAME = os.getenv("BOT_NAME", "Guardian")
-POSTGRES_DSN = "postgresql://postgres:yvdnDXTuEzkwkduOYgdvfbSljVapwYNp@caboose.proxy.rlwy.net:10326/railway"
+POSTGRES_DSN = os.getenv("POSTGRES_DSN")
 
 def _parse_admins(value: str):
     if not value:
