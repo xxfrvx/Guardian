@@ -1,32 +1,74 @@
 from app import db
+import logging
+import asyncio
+import time
+import os
+
+log = logging.getLogger(__name__)
+DB_TIMEOUT = float(os.getenv("DB_TIMEOUT", "5.0"))
+
+async def _await_with_timing(awaitable, label: str):
+    start = time.perf_counter()
+    try:
+        result = await asyncio.wait_for(awaitable, timeout=DB_TIMEOUT)
+        elapsed = (time.perf_counter() - start) * 1000
+        log.info("%s OK (%.1f ms)", label, elapsed)
+        return result
+    except asyncio.TimeoutError:
+        elapsed = (time.perf_counter() - start) * 1000
+        log.error("%s TIMEOUT after %.1f ms", label, elapsed)
+        raise
+    except Exception:
+        elapsed = (time.perf_counter() - start) * 1000
+        log.exception("%s FAILED after %.1f ms", label, elapsed)
+        raise
 
 async def ensure_user(user):
-    await db.execute(
-        """INSERT INTO users (user_id, username, first_name, last_name, language_code)
-           VALUES ($1,$2,$3,$4,$5)
-           ON CONFLICT (user_id) DO UPDATE SET
-             username=EXCLUDED.username,
-             first_name=EXCLUDED.first_name,
-             last_name=EXCLUDED.last_name,
-             language_code=EXCLUDED.language_code""",
-        user.id, user.username, user.first_name, user.last_name, getattr(user, "language_code", None)
+    log.info("ensure_user user_id=%s username=%s", user.id, user.username)
+    await _await_with_timing(
+        db.execute(
+            """INSERT INTO users (user_id, username, first_name, last_name, language_code)
+               VALUES ($1,$2,$3,$4,$5)
+               ON CONFLICT (user_id) DO UPDATE SET
+                 username=EXCLUDED.username,
+                 first_name=EXCLUDED.first_name,
+                 last_name=EXCLUDED.last_name,
+                 language_code=EXCLUDED.language_code""",
+            user.id, user.username, user.first_name, user.last_name, getattr(user, "language_code", None)
+        ),
+        "SQL users UPSERT"
     )
-    await db.execute(
-        """INSERT INTO reputations (user_id) VALUES ($1)
-           ON CONFLICT (user_id) DO NOTHING""",
-        user.id
+    await _await_with_timing(
+        db.execute(
+            """INSERT INTO reputations (user_id) VALUES ($1)
+               ON CONFLICT (user_id) DO NOTHING""",
+            user.id
+        ),
+        "SQL reputations ENSURE"
     )
 
 async def accepted_terms(user_id: int):
-    return await db.fetchval("SELECT accepted_terms_at FROM users WHERE user_id=$1", user_id) is not None
+    log.info("accepted_terms? user_id=%s", user_id)
+    val = await _await_with_timing(
+        db.fetchval("SELECT accepted_terms_at FROM users WHERE user_id=$1", user_id),
+        "SQL users SELECT accepted_terms_at"
+    )
+    return val is not None
 
 async def mark_accept_terms(user_id: int, version: str):
-    await db.execute("UPDATE users SET accepted_terms_at=now() WHERE user_id=$1", user_id)
-    await db.execute(
-        """INSERT INTO agreements (user_id, terms_version, accepted_at)
-           VALUES ($1, $2, now())
-           ON CONFLICT (user_id) DO UPDATE SET terms_version=EXCLUDED.terms_version, accepted_at=EXCLUDED.accepted_at""",
-        user_id, version
+    log.info("mark_accept_terms user_id=%s version=%s", user_id, version)
+    await _await_with_timing(
+        db.execute("UPDATE users SET accepted_terms_at=now() WHERE user_id=$1", user_id),
+        "SQL users UPDATE accepted_terms_at"
+    )
+    await _await_with_timing(
+        db.execute(
+            """INSERT INTO agreements (user_id, terms_version, accepted_at)
+               VALUES ($1, $2, now())
+               ON CONFLICT (user_id) DO UPDATE SET terms_version=EXCLUDED.terms_version, accepted_at=EXCLUDED.accepted_at""",
+            user_id, version
+        ),
+        "SQL agreements UPSERT"
     )
 
 async def get_rep(user_id: int):
