@@ -1,13 +1,13 @@
 from telegram.ext import ApplicationBuilder
 from app import config
 from app.handlers import start, menu, profile, check, reports, moderation, appeals, coins, groups
+from telegram.ext import Application
 from handlers.callback_terms import cb_accept
-
-application.add_handler(CallbackQueryHandler(cb_accept, pattern="accept_terms"))
-
+from telegram.ext import CallbackQueryHandler
 
 def main():
     app = ApplicationBuilder().token(config.BOT_TOKEN).concurrent_updates(True).build()
+    app.add_handler(CallbackQueryHandler(cb_accept, pattern="accept_terms"))
 
     start.setup(app)
     menu.setup(app)
