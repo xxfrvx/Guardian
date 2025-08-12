@@ -1,3 +1,4 @@
+from app import db
 from telegram import Update
 from telegram.ext import ContextTypes, CallbackQueryHandler, CommandHandler
 from app.keyboards import consent_kb, main_menu
