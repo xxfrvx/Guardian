@@ -5,7 +5,7 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 BOT_NAME = os.getenv("BOT_NAME", "Guardian")
-POSTGRES_DSN = os.getenv("POSTGRES_DSN")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 def _parse_admins(value: str):
     if not value:
