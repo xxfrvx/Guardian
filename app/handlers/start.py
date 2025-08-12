@@ -28,9 +28,9 @@ async def cb_accept(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await q.edit_message_text("Спасибо! Доступ открыт.")
         await q.message.reply_text("Главное меню:", reply_markup=main_menu())
     elif data == "show_terms":
-        await q.from_user.send_message(TERMS)
+        await context.bot.send_message(chat_id=q.from_user.id, text=TERMS)
     elif data == "show_privacy":
-        await q.from_user.send_message(PRIVACY)
+        await context.bot.send_message(chat_id=q.from_user.id, text=PRIVACY)
 
 def setup(application):
     application.add_handler(CommandHandler("start", start))
