@@ -70,8 +70,3 @@ async def cb_accept(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def setup(application):
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CallbackQueryHandler(cb_accept, pattern="^(accept_terms|show_terms|show_privacy)$"))
-        await context.bot.send_message(chat_id=q.from_user.id, text=PRIVACY)
-
-def setup(application):
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CallbackQueryHandler(cb_accept, pattern="^(accept_terms|show_terms|show_privacy)$"))
