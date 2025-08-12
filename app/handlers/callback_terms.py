@@ -1,3 +1,5 @@
+from telegram import Update
+from telegram.ext import ContextTypes
 import time
 import asyncio
 import logging
