@@ -14,23 +14,14 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s - %(message)s"
 )
 
-# Создаём объект базы без аргументов — DSN берётся из переменной окружения
 db = Database()
 
-async def main():
-    # Проверка переменной окружения
-    if not os.getenv("DATABASE_URL"):
-        logging.error("DATABASE_URL is not set. Please configure it in Railway Variables.")
-        return
-
+async def setup_bot():
     await db.connect()
 
     app = ApplicationBuilder().token(config.BOT_TOKEN).concurrent_updates(True).build()
-
-    # Делаем базу доступной из любого хендлера через context.bot_data
     app.bot_data["db"] = db
 
-    # Хендлеры
     app.add_handler(CallbackQueryHandler(cb_accept, pattern="accept_terms"))
 
     start.setup(app)
@@ -44,7 +35,10 @@ async def main():
     groups.setup(app)
 
     logging.info(f"{config.BOT_NAME} запущен.")
-    await app.run_polling(close_loop=False)
+    return app
 
+# 🚀 Запускаем без asyncio.run()
 if __name__ == "__main__":
-    asyncio.run(main())
+    loop = asyncio.get_event_loop()
+    app = loop.run_until_complete(setup_bot())
+    app.run_polling()
