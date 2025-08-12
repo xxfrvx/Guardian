@@ -1,21 +1,28 @@
+import asyncio
+import logging
+import os
+
 from telegram.ext import ApplicationBuilder, CallbackQueryHandler
+
 from app import config
 from app.handlers import start, menu, profile, check, reports, moderation, appeals, coins, groups
 from handlers.callback_terms import cb_accept
 from services.database import Database
-
-import asyncio
-import logging
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s - %(message)s"
 )
 
-# Создаём объект базы
-db = Database(dsn=config.POSTGRES_DSN)
+# Создаём объект базы без аргументов — DSN берётся из переменной окружения
+db = Database()
 
 async def main():
+    # Проверка переменной окружения
+    if not os.getenv("DATABASE_URL"):
+        logging.error("DATABASE_URL is not set. Please configure it in Railway Variables.")
+        return
+
     await db.connect()
 
     app = ApplicationBuilder().token(config.BOT_TOKEN).concurrent_updates(True).build()
@@ -23,6 +30,7 @@ async def main():
     # Делаем базу доступной из любого хендлера через context.bot_data
     app.bot_data["db"] = db
 
+    # Хендлеры
     app.add_handler(CallbackQueryHandler(cb_accept, pattern="accept_terms"))
 
     start.setup(app)
