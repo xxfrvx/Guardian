@@ -35,3 +35,6 @@ async def cb_accept(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def setup(application):
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CallbackQueryHandler(cb_accept, pattern="^(accept_terms|show_terms|show_privacy)$"))
+def setup(app):
+    app.add_handler(CallbackQueryHandler(handle_terms_accept, pattern="terms_accept"))
+    app.add_handler(CallbackQueryHandler(handle_terms_show, pattern="terms_show"))
