@@ -9,6 +9,7 @@ import logging
 import time
 
 logger = logging.getLogger(__name__)
+logger.warning("cb_accept CALLED — data=%s user_id=%s", q.data, q.from_user.id)
 
 WELCOME = (
     f"Привет! Я {config.BOT_NAME} — твой защитник в мире телеграм.\n"
