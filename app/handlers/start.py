@@ -9,7 +9,6 @@ import logging
 import time
 
 logger = logging.getLogger(__name__)
-logger.warning("cb_accept CALLED — data=%s user_id=%s", q.data, q.from_user.id)
 
 WELCOME = (
     f"Привет! Я {config.BOT_NAME} — твой защитник в мире телеграм.\n"
@@ -47,8 +46,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def cb_accept(update: Update, context: ContextTypes.DEFAULT_TYPE):
     q = update.callback_query
     await q.answer()
+
+    logger.warning("cb_accept CALLED — data=%s user_id=%s", q.data, q.from_user.id)
+
     data = q.data
     logger.info("CALLBACK data=%s user_id=%s", data, q.from_user.id)
+   
 
     if data == "accept_terms":
         t0 = time.perf_counter()
